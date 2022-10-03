@@ -1,4 +1,4 @@
-db:
-  driver: mysql
-  user: omry
-  pass: secret
+
+IMU:
+  sync_with_frame: true  # true = TIME_REFERENCE::IMAGE (retrieve the closest sensor data to the last image frame) , false = TIME_REFERENCE::CURRENT (the most recent sensor data available)
+  

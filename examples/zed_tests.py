@@ -13,6 +13,7 @@ def cv_heatmap(zed,depth_zed):
     heatmap = cv2.applyColorMap(image_depth_ocv[:,:,0],cv2.COLORMAP_JET)
     return heatmap
 
+
 def abs_heatmap(zed,depth):
     zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
     depth_vals = depth.get_data()
