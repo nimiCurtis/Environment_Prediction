@@ -1,8 +1,10 @@
 ########################################################################
 # TO DO:
+# - write recorder class and sample (high prior)
+# - write camera class (high prior)
 # - think about params needed for the imu (medium prior)
 # - check positional tracking module (medium prior)
-# - write recorder class and sample (high prior)
+# - check spatial mapping module (medium prior)
 # - write logger (low prior)
 ########################################################################
 
