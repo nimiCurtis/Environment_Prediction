@@ -1,7 +1,8 @@
 ########################################################################
 # TO DO:
 # - think about params needed for the imu (medium prior)
-# - write recorder class and sample (highe prior)
+# - check positional tracking module (medium prior)
+# - write recorder class and sample (high prior)
 # - write logger (low prior)
 ########################################################################
 
@@ -63,7 +64,7 @@ class ZED():
     def close(self):
         """If open() has been called, this function will close the connection to the camera (or the SVO file), free the corresponding memory and shut the program down. 
         """        
-        
+        self.zed.disable_positional_tracking()
         self.zed.close()
         exit()
 
