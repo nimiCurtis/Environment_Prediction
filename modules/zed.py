@@ -1,15 +1,17 @@
 ########################################################################
 # TO DO:
-# - write recorder class and sample (high prior)
-# - write camera class (high prior)
-# - think about params needed for the imu (medium prior)
+# - cam module (high) and to the recorder
+# - understand hydra 'output' folder , where to save configs
+# - organize recorder
+# - as np array function 
+# - think about params needed for the camera and imu (medium prior)
 # - check positional tracking module (medium prior)
 # - check spatial mapping module (medium prior)
 # - write logger (low prior)
 ########################################################################
 
 # Dependencies
-import signal
+
 import hydra
 from omegaconf import DictConfig
 
@@ -38,12 +40,13 @@ class ZED():
             """        
         
         self.cfg = cfg
-        self.signal = signal.signal(signal.SIGINT, self.manual_shutdown)
+        
         
         self.init_params = sl.InitParameters(camera_resolution=sl.RESOLUTION.HD720, #a structure containing all the initial parameters. default : a preset of InitParameters.
                                                 depth_mode=sl.DEPTH_MODE.ULTRA,
                                                 coordinate_units=sl.UNIT.MILLIMETER,
-                                                coordinate_system=sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP)
+                                                coordinate_system=sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP,
+                                                camera_fps = 15)
 
         self.runtime_params= sl.RuntimeParameters()
         
@@ -70,16 +73,9 @@ class ZED():
         self.zed.close()
         exit()
 
-    def manual_shutdown(self, signum, frame):
-        """ Method for detecting ctr-c which call the close method
 
-            Args:
-                signum (?): ?
-                frame (?): ?
-            """ 
 
-        print("ctrl-c detected") 
-        self.close()
+
 
     def grab_cam(self):
         """This function will grab the latest images from the camera, rectify them, and compute the measurements based on the RuntimeParameters provided
@@ -140,8 +136,8 @@ class IMU():
             """        
         
         self.imu_data = self.sensors_data.get_imu_data() # Contains IMU sensor data
-        self.linear_acceleration =  np.array(self.imu_data.get_linear_acceleration())
-        self.angular_velocity = np.array(self.imu_data.get_angular_velocity())
+        self.linear_acceleration =  self.imu_data.get_linear_acceleration()
+        self.angular_velocity = self.imu_data.get_angular_velocity()
         self.pose = self.imu_data.get_pose()
         self.orientation = self.pose.get_orientation()
         self.translation = self.pose.get_translation()
@@ -192,16 +188,14 @@ class IMU():
 
 # Load configuration file from /config/recorder/zedm.yaml
 @hydra.main(config_path="../config/recorder", config_name = "zedm")
-# Test the classes and methods in main function
+# Test the classes and methods in main function 
 def main( cfg : DictConfig):
     zed = ZED(cfg)
     zed.open()
     while zed.is_grab_cam_success():
         if zed.is_retrieve_sensor_success():
             zed.IMU.update_imu_data()
-            lin_acc = zed.IMU.get_linear_acceleration()
-            trans, ori = zed.IMU.get_pose()
-            ts = zed.IMU.get_ts()
+            trans, ori = zed.IMU.get_pose() # get the pose calculated by the imu
             print(ori,"\n")
 
 

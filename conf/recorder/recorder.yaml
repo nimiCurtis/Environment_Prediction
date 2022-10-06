@@ -1,0 +1,12 @@
+defaults:
+  - zed: zedm.yaml
+
+# zed: zedm.yaml
+
+recorder:
+  rate: 30 
+  rec_imu: true
+  rec_rectified: false
+  image_recorderd: 0 # 0 : left view | 1 : right view | 2 : both
+  rec_depth: false
+  rec_confidence: false
