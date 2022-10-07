@@ -1,18 +1,23 @@
 ########################################################################
 # TO DO:
+
 # - cam module (high) and to the recorder
 # - understand hydra 'output' folder , where to save configs
 # - organize recorder
-# - as np array function 
+# - as np array function (low)
 # - think about params needed for the camera and imu (medium prior)
 # - check positional tracking module (medium prior)
 # - check spatial mapping module (medium prior)
 # - write logger (low prior)
+# - documentation files
+# - update readme
 ########################################################################
 
 # Dependencies
 
 import hydra
+
+
 from omegaconf import DictConfig
 
 import pyzed.sl as sl
@@ -187,17 +192,23 @@ class IMU():
 
 
 # Load configuration file from /config/recorder/zedm.yaml
-@hydra.main(config_path="../config/recorder", config_name = "zedm")
+@hydra.main(config_path="../conf/recorder/zed", config_name = "zedm")
 # Test the classes and methods in main function 
 def main( cfg : DictConfig):
     zed = ZED(cfg)
     zed.open()
-    while zed.is_grab_cam_success():
-        if zed.is_retrieve_sensor_success():
+    current = 0
+    prev = 0
+    while zed.is_retrieve_sensor_success():
+        
             zed.IMU.update_imu_data()
             trans, ori = zed.IMU.get_pose() # get the pose calculated by the imu
-            print(ori,"\n")
-
+            ts = zed.IMU.get_ts()
+            current = ts.get_milliseconds()
+            dt = current - prev
+            print(dt,"\n")
+            prev = current
+            
 
 if __name__ == "__main__": 
     main()
