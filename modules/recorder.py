@@ -2,7 +2,6 @@
 # Dependencies
 import hydra
 
-
 from omegaconf import DictConfig
 from datetime import datetime
 import os
@@ -30,6 +29,7 @@ class RECORDER:
         self.path_to_cwd = hydra.utils.get_original_cwd()
         self.path_to_dataset = os.path.join(self.path_to_cwd, 'dataset')
         self.path_to_data_dir = self.path_to_dataset+f"/data_{self.date}/"
+        
         if not os.path.exists(self.path_to_data_dir):
             os.mkdir(self.path_to_data_dir)
             

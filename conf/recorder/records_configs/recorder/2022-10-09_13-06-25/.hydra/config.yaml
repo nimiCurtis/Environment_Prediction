@@ -1,0 +1,13 @@
+zed:
+  IMU:
+    sync_with_frame: false
+    pose:
+      ori_in_quat: false
+      euler_in_rad: false
+recorder:
+  rate: 30
+  rec_imu: true
+  rec_rectified: false
+  image_recorderd: 0
+  rec_depth: false
+  rec_confidence: false

@@ -1,3 +1,4 @@
 .vscode/
 dataset/*
 outputs/*
+records_configs/*

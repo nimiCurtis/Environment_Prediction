@@ -1,4 +1,17 @@
 
+CAM:
+  #init
+  #runtime
+  capture:
+    rgb:   
+      enable: true # true = will retrieve rgb image | wont retrieve rgb image
+      view: 0 # 0 = left len | 1 = right len | 2 = left grey
+    
+    depth:
+      enable: false
+
+
+
 IMU:
   sync_with_frame: false  # true = TIME_REFERENCE::IMAGE (retrieve the closest sensor data to the last image frame) , false = TIME_REFERENCE::CURRENT (the most recent sensor data available)
   pose :

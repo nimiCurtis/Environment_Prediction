@@ -9,7 +9,7 @@ def difference_heatmap(image1,image2):
 
 def cv_heatmap(zed,depth_zed):
     zed.retrieve_image(depth_zed, sl.VIEW.DEPTH)
-    image_depth_ocv = depth_zed.get_data()
+    image_depth_ocv = depth_zed.get_data()  
     heatmap = cv2.applyColorMap(image_depth_ocv[:,:,0],cv2.COLORMAP_JET)
     return heatmap
 

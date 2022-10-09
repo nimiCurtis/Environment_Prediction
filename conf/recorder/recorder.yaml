@@ -3,6 +3,12 @@ defaults:
 
 # zed: zedm.yaml
 
+hydra:
+  run:
+    dir: ./conf/recorder/records_configs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    #dir: ./conf/recorder/records_configs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}
+    #dir: outputs/${now:%Y-%m-%d_%H-%M-%S}/rate:${recorder.rate}
+
 recorder:
   rate: 30 
   rec_imu: true

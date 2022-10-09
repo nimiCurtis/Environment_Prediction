@@ -1,16 +1,15 @@
 ########################################################################
 # TO DO:
 
-# - cam module (high) and to the recorder
-# - understand hydra 'output' folder , where to save configs
-# - organize recorder
+# - cam module (high) and to the recorder -1
+# - organize recorder -2
 # - as np array function (low)
-# - think about params needed for the camera and imu (medium prior)
+# - think about params needed for the camera and imu (medium prior) -5
 # - check positional tracking module (medium prior)
 # - check spatial mapping module (medium prior)
 # - write logger (low prior)
-# - documentation files
-# - update readme
+# - documentation files -3
+# - update readme -4
 ########################################################################
 
 # Dependencies
@@ -22,6 +21,7 @@ from omegaconf import DictConfig
 
 import pyzed.sl as sl
 import numpy as np
+import cv2
 
 
 class ZED():
@@ -47,7 +47,7 @@ class ZED():
         self.cfg = cfg
         
         
-        self.init_params = sl.InitParameters(camera_resolution=sl.RESOLUTION.HD720, #a structure containing all the initial parameters. default : a preset of InitParameters.
+        self.init_params = sl.InitParameters(camera_resolution=sl.RESOLUTION.HD720, # a structure containing all the initial parameters. default : a preset of InitParameters.
                                                 depth_mode=sl.DEPTH_MODE.ULTRA,
                                                 coordinate_units=sl.UNIT.MILLIMETER,
                                                 coordinate_system=sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP,
@@ -57,7 +57,9 @@ class ZED():
         
         self.zed = sl.Camera() # Default constructor which creates an empty Camera object.Parameters will be set when calling open(init_param) with the desired InitParameters .
         
-        self.IMU = IMU(self.cfg.IMU)         
+        self.IMU = IMU(self.cfg.IMU)  
+        
+        self.captured_image = sl.Mat()       
 
     def open(self):
         """Opens the ZED camera from the provided InitParameters.
@@ -77,10 +79,6 @@ class ZED():
         self.zed.disable_positional_tracking()
         self.zed.close()
         exit()
-
-
-
-
 
     def grab_cam(self):
         """This function will grab the latest images from the camera, rectify them, and compute the measurements based on the RuntimeParameters provided
@@ -118,6 +116,19 @@ class ZED():
         
         return self.retrieve_sensor() == sl.ERROR_CODE.SUCCESS
 
+    def capture(self):
+        if self.cfg.CAM.capture.rgb.enable:
+            self.capture_rgb()
+
+    def capture_rgb(self):
+        self.zed.retrieve_image(self.captured_image, sl.VIEW(self.cfg.CAM.capture.rgb.view))
+
+    def capture_depth(self):
+        pass
+    
+    def capture_confidence(self):
+        pass
+
 class IMU():
 
     def __init__(self, cfg):
@@ -126,9 +137,9 @@ class IMU():
         
         self.cfg = cfg
         self.sensors_data = sl.SensorsData() # Default constructor which creates an empty SensorsData (identity).
-        self.update_imu_data()
+        self.retrieve_imu_data()
 
-    def update_imu_data(self):
+    def retrieve_imu_data(self):
         """This method updating the imu attributes
         
             Attributes:
@@ -199,15 +210,16 @@ def main( cfg : DictConfig):
     zed.open()
     current = 0
     prev = 0
-    while zed.is_retrieve_sensor_success():
-        
-            zed.IMU.update_imu_data()
-            trans, ori = zed.IMU.get_pose() # get the pose calculated by the imu
-            ts = zed.IMU.get_ts()
-            current = ts.get_milliseconds()
-            dt = current - prev
-            print(dt,"\n")
-            prev = current
+    k=0
+    image = sl.Mat()
+    while zed.is_grab_cam_success():
+        zed.capture()
+        image = zed.captured_image.get_data()
+        if k<5:
+            
+            cv2.imwrite(str(k)+".jpg", image)
+        k+=1        
+            
             
 
 if __name__ == "__main__": 
