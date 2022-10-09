@@ -10,6 +10,7 @@
 # - write logger (low prior)
 # - documentation files -3
 # - update readme -4
+# - using h5py for storing images and data
 ########################################################################
 
 # Dependencies
@@ -59,7 +60,9 @@ class ZED():
         
         self.IMU = IMU(self.cfg.IMU)  
         
-        self.captured_image = sl.Mat()       
+        self.captured_image = sl.Mat() 
+        self.captured_depth = sl.Mat()
+        self.captured_confidence = sl.Mat()      
 
     def open(self):
         """Opens the ZED camera from the provided InitParameters.
@@ -117,17 +120,22 @@ class ZED():
         return self.retrieve_sensor() == sl.ERROR_CODE.SUCCESS
 
     def capture(self):
-        if self.cfg.CAM.capture.rgb.enable:
+        
             self.capture_rgb()
+            self.capture_depth()
+            self.capture_confidence()
 
     def capture_rgb(self):
         self.zed.retrieve_image(self.captured_image, sl.VIEW(self.cfg.CAM.capture.rgb.view))
 
     def capture_depth(self):
-        pass
+        self.zed.retrieve_measure(self.captured_depth,sl.MEASURE.DEPTH)
     
     def capture_confidence(self):
-        pass
+        self.zed.retrieve_measure(self.captured_confidence, sl.MEASURE.CONFIDENCE)
+        
+    def as_numpy(self, image):
+        return image.get_data()
 
 class IMU():
 

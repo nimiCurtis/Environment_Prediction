@@ -4,16 +4,18 @@ CAM:
   #runtime
   capture:
     rgb:   
-      enable: true # true = will retrieve rgb image | wont retrieve rgb image
+      #enable: true # true = will retrieve rgb image | wont retrieve rgb image
       view: 0 # 0 = left len | 1 = right len | 2 = left grey
     
-    depth:
-      enable: false
+    # depth:
+    #   enable: false
 
+    # confidence:
+    #   enable: false
 
 
 IMU:
-  sync_with_frame: false  # true = TIME_REFERENCE::IMAGE (retrieve the closest sensor data to the last image frame) , false = TIME_REFERENCE::CURRENT (the most recent sensor data available)
+  sync_with_frame: true  # true = TIME_REFERENCE::IMAGE (retrieve the closest sensor data to the last image frame) , false = TIME_REFERENCE::CURRENT (the most recent sensor data available)
   pose :
     ori_in_quat: false # true = get_pose will return orientation in quaternion units, false =  get_pose will return orientation in euler angles
     euler_in_rad: false # true = euler angles will returns in rad units, false = euler angles will returns in deg units

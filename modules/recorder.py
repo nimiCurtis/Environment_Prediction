@@ -11,6 +11,7 @@ import signal
 from zed import ZED
 import pyzed.sl as sl
 import numpy as np
+import cv2
 
 class RECORDER: 
 
@@ -20,7 +21,8 @@ class RECORDER:
         self.signal = signal.signal(signal.SIGINT, self.stop)
         self.all_data_dict = {}
         self.imu_data_dict= {}
-        self.id = 0 # = frame number
+        self.depth_data_dict = {}
+        self.id = 0 # frame number
         self.create_new_data_pkg()
 
 
@@ -29,12 +31,28 @@ class RECORDER:
         self.path_to_cwd = hydra.utils.get_original_cwd()
         self.path_to_dataset = os.path.join(self.path_to_cwd, 'dataset')
         self.path_to_data_dir = self.path_to_dataset+f"/data_{self.date}/"
+        self.path_to_images = os.path.join(self.path_to_data_dir, 'images')
         
         if not os.path.exists(self.path_to_data_dir):
             os.mkdir(self.path_to_data_dir)
+            os.mkdir(self.path_to_images)
             
-            if not self.cfg.zed.IMU.sync_with_frame:
-                self.path_to_imu_data_dict = os.path.join(self.path_to_data_dir,f'imu_data_{self.date}.json')
+            if self.cfg.recorder.rec_imu:
+                if not self.cfg.zed.IMU.sync_with_frame:
+                    self.path_to_imu_data_dict = os.path.join(self.path_to_data_dir,f'imu_data_{self.date}.json')
+            
+            if self.cfg.recorder.rec_rgb:
+                self.path_to_rgb = os.path.join(self.path_to_images,'rgb')
+                os.mkdir(self.path_to_rgb)
+                
+            if self.cfg.recorder.rec_depth:
+                self.path_to_depth_dic = os.path.join(self.path_to_data_dir,f'depth_data_{self.date}.json')
+                
+                
+            if self.cfg.recorder.rec_confidence:
+                self.path_to_confidence = os.path.join(self.path_to_images,'confidence')
+                os.mkdir(self.path_to_confidence)
+                
             
             self.path_to_all_data_dict = os.path.join(self.path_to_data_dir,f'data_file{self.date}.json')
             
@@ -42,6 +60,16 @@ class RECORDER:
     def update(self):
         if self.cfg.recorder.rec_imu:
             self.update_imu_dict()
+
+        if self.cfg.recorder.rec_rgb:
+            self.update_image(self.path_to_rgb, self.zed.as_numpy(self.zed.captured_image)) 
+
+        if self.cfg.recorder.rec_depth:
+            self.update_depth()
+
+        if self.cfg.recorder.rec_confidence:
+            self.update_image(self.path_to_confidence,self.zed.as_numpy(self.zed.captured_confidence))
+        
         self.update_all_data_dict()
         
     def save(self):
@@ -51,11 +79,16 @@ class RECORDER:
                 self.save_imu()
                 self.all_data_dict["imu_data_dir"] = self.path_to_imu_data_dict
 
-        
+        if self.cfg.recorder.rec_depth:
+            self.save_depth()
+            self.all_data_dict["depth"] = self.path_to_depth_dic
+
         self.save_all_data()    
         
         
-
+    def update_depth(self):
+        self.depth_data_dict[self.id] = self.zed.as_numpy(self.zed.captured_depth).tolist()
+        
     def update_all_data_dict(self):
         data = {}
 
@@ -64,8 +97,14 @@ class RECORDER:
                 pass
             else:
                 data['IMU'] =  self.imu_data_dict[self.id]
-                self.all_data_dict[self.id] = data 
-            
+
+        if self.cfg.recorder.rec_confidence:
+            data["confidence"] = os.path.join(self.path_to_confidence, f"frame{self.id}.jpg")
+        
+        if self.cfg.recorder.rec_rgb:
+            data["rgb"] = os.path.join(self.path_to_rgb, f"frame{self.id}.jpg")
+        
+        self.all_data_dict[self.id] = data
         
         
     def save_all_data(self):
@@ -84,8 +123,12 @@ class RECORDER:
         self.save_json(self.path_to_imu_data_dict, self.imu_data_dict)
         print("imu data saved")
     
-    def save_image(self):
-        pass 
+    def save_depth(self):
+        self.save_json(self.path_to_depth_dic, self.depth_data_dict)
+        print("depth data saved")
+        
+    def update_image(self, path, image):
+        cv2.imwrite(os.path.join(path, f"frame{self.id}.jpg"),image)
     
     def save_json(self, path, data):
         with open(path, 'w') as json_file:
@@ -97,14 +140,14 @@ class RECORDER:
         self.zed.open()
         
         prev = 0
-        while self.zed.is_grab_cam_success():
-            self.id+=1
-            
-            #timestamp = self.zed.zed.get_timestamp(sl.TIME_REFERENCE.IMAGE) # Get the timestamp at the time the image was captured
-            
-            if self.zed.is_retrieve_sensor_success():
+        while True:
+            if self.zed.is_grab_cam_success():
+                self.id+=1
                 
-                self.zed.IMU.update_imu_data()
+                #timestamp = self.zed.zed.get_timestamp(sl.TIME_REFERENCE.IMAGE) # Get the timestamp at the time the image was captured
+                self.zed.IMU.retrieve_imu_data()
+                self.zed.capture()
+                
                 self.update()
                 print(self.id)
 
