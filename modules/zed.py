@@ -1,7 +1,7 @@
 ########################################################################
 # TO DO:
 
-# - cam module (high) and to the recorder -1
+# - save depth as image
 # - organize recorder -2
 # - as np array function (low)
 # - think about params needed for the camera and imu (medium prior) -5
@@ -10,7 +10,8 @@
 # - write logger (low prior)
 # - documentation files -3
 # - update readme -4
-# - using h5py for storing images and data
+# - using h5py for storing images and data?? 
+# - which format to save depth ? 
 ########################################################################
 
 # Dependencies
@@ -122,14 +123,22 @@ class ZED():
     def capture(self):
         
             self.capture_rgb()
-            self.capture_depth()
+            self.capture_depth_vals()
             self.capture_confidence()
 
     def capture_rgb(self):
         self.zed.retrieve_image(self.captured_image, sl.VIEW(self.cfg.CAM.capture.rgb.view))
 
-    def capture_depth(self):
+    def capture_depth_vals(self):
         self.zed.retrieve_measure(self.captured_depth,sl.MEASURE.DEPTH)
+    
+    def get_depth_as_heatmap(self):
+        depth_vals = self.captured_depth.get_data()
+        np.nan_to_num(depth_vals)
+        depth_inter = (np.interp(depth_vals, [0,self.cfg.CAM.capture.depth.heatmap_max],[255,0]))
+        depth_inter = np.array(depth_inter, dtype=np.uint8)
+        heatmap = cv2.applyColorMap(depth_inter,cv2.COLORMAP_JET)
+        return heatmap
     
     def capture_confidence(self):
         self.zed.retrieve_measure(self.captured_confidence, sl.MEASURE.CONFIDENCE)

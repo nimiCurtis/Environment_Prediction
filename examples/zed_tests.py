@@ -4,6 +4,8 @@ import time
 import numpy as np
 import os
 
+
+
 def difference_heatmap(image1,image2):
     return cv2.subtract(image1, image2)
 

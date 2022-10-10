@@ -5,9 +5,10 @@ CAM:
   capture:
     rgb:   
       #enable: true # true = will retrieve rgb image | wont retrieve rgb image
-      view: 0 # 0 = left len | 1 = right len | 2 = left grey
+      view: 0 # 0 = L | 1 = R | 2 = LG | 3 = RG | 9 = DEPTH
     
-    # depth:
+    depth:
+      heatmap_max: 2000
     #   enable: false
 
     # confidence:

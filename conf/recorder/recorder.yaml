@@ -11,8 +11,9 @@ hydra:
 
 recorder:
   rate: 30 
-  rec_imu: true
+  rec_imu: false
   # add in the future imu rec rate
-  rec_rgb: true
-  rec_depth: false
-  rec_confidence: true
+  rec_rgb: false
+  rec_depth_vals: false
+  rec_depth_map: false
+  rec_confidence: false
