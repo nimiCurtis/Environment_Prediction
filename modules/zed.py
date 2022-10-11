@@ -1,24 +1,15 @@
 ########################################################################
 # TO DO:
 
-# - save depth as image
-# - organize recorder -2
-# - as np array function (low)
+# save depth as np array npy file ? 
 # - think about params needed for the camera and imu (medium prior) -5
 # - check positional tracking module (medium prior)
 # - check spatial mapping module (medium prior)
 # - write logger (low prior)
-# - documentation files -3
-# - update readme -4
-# - using h5py for storing images and data?? 
-# - which format to save depth ? 
 ########################################################################
 
 # Dependencies
-
 import hydra
-
-
 from omegaconf import DictConfig
 
 import pyzed.sl as sl
@@ -40,7 +31,7 @@ class ZED():
         """    
 
     def __init__(self , cfg):
-        """Default constructor which creates ZED object depending on the configuration file config/recorder/zedm.yaml
+        """Default constructor which creates ZED object depending on the configuration file conf/recorder/zed/zedm.yaml
 
             Args:
                 cfg (DictConfig): deictionary configuration  parameters of the ZED object
@@ -59,11 +50,11 @@ class ZED():
         
         self.zed = sl.Camera() # Default constructor which creates an empty Camera object.Parameters will be set when calling open(init_param) with the desired InitParameters .
         
-        self.IMU = IMU(self.cfg.IMU)  
+        self.IMU = IMU(self.cfg.IMU)  # init imu object
         
-        self.captured_image = sl.Mat() 
-        self.captured_depth = sl.Mat()
-        self.captured_confidence = sl.Mat()      
+        self.captured_image = sl.Mat()           # handle with rgb image matrix
+        self.captured_depth = sl.Mat()           # handle with depth image matrix
+        self.captured_confidence = sl.Mat()      # handle with confidence image matrix
 
     def open(self):
         """Opens the ZED camera from the provided InitParameters.
@@ -121,29 +112,55 @@ class ZED():
         return self.retrieve_sensor() == sl.ERROR_CODE.SUCCESS
 
     def capture(self):
-        
-            self.capture_rgb()
-            self.capture_depth_vals()
-            self.capture_confidence()
+        """This function update captured images matrix by calling capture_<type_of_Image>()
+            """            
+        self.capture_rgb()
+        self.capture_depth_vals()
+        self.capture_confidence()
 
     def capture_rgb(self):
+        """Updating rgb image matrix by using zed.retrieve_image() depend on the view parameter
+            """        
+        
         self.zed.retrieve_image(self.captured_image, sl.VIEW(self.cfg.CAM.capture.rgb.view))
 
     def capture_depth_vals(self):
+        """Updating depth vals matrix by using zed.retrieve_measure()
+            """       
+        
         self.zed.retrieve_measure(self.captured_depth,sl.MEASURE.DEPTH)
-    
+
     def get_depth_as_heatmap(self):
-        depth_vals = self.captured_depth.get_data()
-        np.nan_to_num(depth_vals)
-        depth_inter = (np.interp(depth_vals, [0,self.cfg.CAM.capture.depth.heatmap_max],[255,0]))
-        depth_inter = np.array(depth_inter, dtype=np.uint8)
-        heatmap = cv2.applyColorMap(depth_inter,cv2.COLORMAP_JET)
+        """This function return depth heatmap depend on the depth_vals and heatmap_max parameter
+            using cv2.COLORMAP_JET color map
+            
+            Returns:
+            heatmap(numpy array (camera_res)): depth heat map rgb image
+            """        
+        
+        depth_vals = self.captured_depth.get_data() # get the depth matrix in np.array type
+        np.nan_to_num(depth_vals)                   # change nan to 0
+        depth_inter = (np.interp(depth_vals, [0,self.cfg.CAM.capture.depth.heatmap_max],[255,0])) # interpolate depth to greyscale vals
+        depth_inter = np.array(depth_inter, dtype=np.uint8) # modify type to np.uint8 (also it round the vals)
+        heatmap = cv2.applyColorMap(depth_inter,cv2.COLORMAP_JET) # apply cv2 color map
         return heatmap
     
     def capture_confidence(self):
+        """Updating confidence image matrix by using zed.retrieve_measure()
+            """        
+        
         self.zed.retrieve_measure(self.captured_confidence, sl.MEASURE.CONFIDENCE)
         
     def as_numpy(self, image):
+        """This function converting Mat object to equal numpy array type
+
+        Args:
+            image (Mat (camera_res)): zed image Mat object
+
+        Returns:
+            numpy array (camera_res): image converted to numpy
+            """        
+        
         return image.get_data()
 
 class IMU():
